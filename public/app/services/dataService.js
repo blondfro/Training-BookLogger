@@ -3,9 +3,9 @@
 ( function () {
 
     angular.module("app")
-        .factory("dataService", dataService);
+        .factory("dataService", ["$q", "$timeout", dataService]);
     
-    function dataService(logger) {
+    function dataService($q, $timeout) {
 
         return {
             getAllBooks: getAllBooks,
@@ -14,34 +14,49 @@
         
         function getAllBooks() {
 
-            logger.output("getting all books");
-
-            return [
+            var booksArray = [
                 {
-                    books_id: 1,
+                    book_id: 1,
                     title: "Harry Potter and the Deathly Hallows",
                     author: "J.K. Rowling",
                     year_published: 2000
                 },
                 {
-                    books_id: 1,
+                    book_id: 2,
                     title: "The Cat in the Hat",
                     author: "Dr. Seuss",
                     year_published: 1957
                 },
                 {
-                    books_id: 1,
+                    book_id: 3,
                     title: "Encyclopedia Brown, Boy Detective",
                     author: "Donald J. Sobol",
                     year_published: 1963
                 }
             ];
+
+            var deffered = $q.defer();
+            
+            $timeout(function () {
+                var successful = true;
+                if (successful) {
+
+                    deffered.notify("Just getting started gathering books... ");
+                    deffered.notify("almost done gathering books... ");
+
+                    deffered.resolve(booksArray);
+                } else {
+                    deffered.reject("Error retrieving books");
+                }
+
+
+            }, 1000);
+
+            return deffered.promise;
         }
         
         function getAllReaders() {
-            logger.output("getting all readers");
-
-            return [
+            var readersArray = [
                 {
                     reader_id: 1,
                     name: "Marie",
@@ -61,6 +76,15 @@
                     totalMinutesRead: 600
                 }
             ];
+
+            var deffered = $q.defer();
+
+            $timeout(function () {
+
+                    deffered.resolve(readersArray);
+
+            }, 1500);
+            return deffered.promise;
         }
     }
 
