@@ -2,18 +2,23 @@
 
     angular.module('app')
         .controller('BooksController', ["books", "dataService", "logger", "badgeService",
-            "$cookies", "$cookieStore", "$log", BooksController]);
+            "$cookies", "$cookieStore", "$log", "$route", "BooksResource", BooksController]);
 
 
-    function BooksController(books, dataService, logger, badgeService, $cookie, $cookieStore, $log) {
+    function BooksController(books, dataService, logger, badgeService, $cookie, $cookieStore,
+                             $log, $route, BooksResource) {
 
         var vm = this;
         vm.appName = books.appName;
 
-        dataService.getAllBooks()
-            .then(getBooksSuccess, null, getBooksNotification)
-            .catch(errorCallback)
-            .finally(getAllBooksComplete);
+
+        vm.allBooks = BooksResource.query();
+
+        //This gets commented out when we inject the $resource service of BooksResource above.
+        // dataService.getAllBooks()
+        //     .then(getBooksSuccess, null, getBooksNotification)
+        //     .catch(errorCallback)
+        //     .finally(getAllBooksComplete);
 
         function getBooksSuccess(books) {
             vm.allBooks = books;
@@ -25,7 +30,7 @@
         // }
 
         function errorCallback(errorMessage) {
-            // console.log("Error Message: " + errorMessage);
+            console.log("Error Message: " + errorMessage);
         }
 
         function getBooksNotification(notification) {
@@ -52,6 +57,22 @@
         function getAllReadersComplete() {
             console.log("getAllReaders has completed!")
         }
+
+        vm.deleteBook = function (bookID) {
+          dataService.deleteBook(bookID)
+              .then(deleteBookSuccess)
+              .catch(deleteBookError);
+        };
+
+        function deleteBookSuccess(message) {
+            $log.info(message);
+            $route.reload();
+        }
+
+        function deleteBookError(errorMessage) {
+            $log.error(errorMessage);
+        }
+
         //commented out once we started using the $q service here as well.
         // vm.allReaders = dataService.getAllReaders();
 

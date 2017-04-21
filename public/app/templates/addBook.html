@@ -5,26 +5,26 @@
         <label for="bookTitle" class="col-sm-1 control-label"></label>
 
         <div class="col-sm-4">
-            <input type="text" class="form-control" id="bookTitle" placeholder="Title">
+            <input ng-model="addNewBook.newBook.title" type="text" class="form-control" id="bookTitle" placeholder="Title">
         </div>
     </div>
     <div class="form-group">
         <label for="bookAuthor" class="col-sm-1 control-label"></label>
 
         <div class="col-sm-4">
-            <input type="text" class="form-control" id="bookAuthor" placeholder="Author">
+            <input ng-model="addNewBook.newBook.author" type="text" class="form-control" id="bookAuthor" placeholder="Author">
         </div>
     </div>
     <div class="form-group">
         <label for="bookPublished" class="col-sm-1 control-label"></label>
 
         <div class="col-sm-4">
-            <input type="text" class="form-control" id="bookPublished" placeholder="Year Published">
+            <input ng-model="addNewBook.newBook.year_published" type="text" class="form-control" id="bookPublished" placeholder="Year Published">
         </div>
     </div>
     <div class="form-group">
         <div class="col-sm-offset-1 col-sm-5">
-            <button class="btn btn-default">Save</button>
+            <button class="btn btn-default" ng-click="addNewBook.addBook()">Save</button>
         </div>
     </div>
 </form>
