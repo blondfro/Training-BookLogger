@@ -2,15 +2,23 @@
 
     angular.module('app')
         .controller('BooksController', ["books", "dataService", "logger", "badgeService",
-            "$cookies", "$cookieStore", "$log", "$route", "BooksResource", BooksController]);
+            "$cookies", "$cookieStore", "$log", "$route", "BooksResource", 'currentUser',
+            BooksController]);
 
 
     function BooksController(books, dataService, logger, badgeService, $cookie, $cookieStore,
-                             $log, $route, BooksResource) {
+                             $log, $route, BooksResource, currentUser) {
 
         var vm = this;
         vm.appName = books.appName;
 
+        dataService.getUserSummary()
+            .then(getUserSummarySuccess);
+
+        function getUserSummarySuccess(summaryData) {
+            console.log(summaryData);
+            vm.summaryData = summaryData;
+        }
 
         vm.allBooks = BooksResource.query();
 
@@ -81,7 +89,12 @@
         logger.output("BooksController has been created");
 
         vm.favoriteBook = $cookie.favoriteBook;
-        vm.lastEdited = $cookieStore.get('lastEdited');
+
+        vm.currentUser = currentUser;
+
+        // this line can be removed because we we've created a service to handle this rather
+        // than a cookie.
+        // vm.lastEdited = $cookieStore.get('lastEdited');
 
 
         // $log service examples.  Requires the injection of the $log service.

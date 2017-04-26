@@ -3,9 +3,9 @@
 ( function () {
 
     angular.module("app")
-        .factory("dataService", ["$q", "$timeout", '$http', 'constants', dataService]);
+        .factory("dataService", ["$q", "$timeout", '$http', 'constants', '$cacheFactory', dataService]);
     
-    function dataService($q, $timeout, $http, constants) {
+    function dataService($q, $timeout, $http, constants, $cacheFactory) {
 
         return {
             getAllBooks: getAllBooks,
@@ -13,9 +13,65 @@
             getBookByID: getBookByID,
             updateBook: updateBook,
             addBook: addBook,
-            deleteBook: deleteBook
+            deleteBook: deleteBook,
+            getUserSummary: getUserSummary
         };
 
+        function getUserSummary() {
+
+            var deferred = $q.defer();
+
+            var dataCache = $cacheFactory.get('bookLoggerCache');
+
+            if (!dataCache) {
+                dataCache = $cacheFactory('bookLoggerCache');
+            }
+
+            var summaryFromCache = dataCache.get('summary');
+
+            if (summaryFromCache) {
+                console.log('returning summary from cache');
+                deferred.resolve(summaryFromCache);
+            } else {
+
+                console.log('gathering new summary data');
+
+                var booksPromise = getAllBooks();
+                var readersPromise = getAllReaders();
+
+                $q.all([booksPromise, readersPromise])
+                    .then(function (bookLoggerData) {
+
+                        var allBooks = bookLoggerData[0];
+                        var allReaders = bookLoggerData[1];
+
+                        var grandTotalMinutes = 0;
+
+                        allReaders.forEach(function (currentReader, index, array) {
+                            grandTotalMinutes += currentReader.totalMinutesRead;
+                        });
+
+                        var summaryData = {
+                            bookCount: allBooks.length,
+                            readerCount: allReaders.length,
+                            grandTotalMinutes: grandTotalMinutes
+                        };
+
+                        dataCache.put('summary', summaryData);
+
+                        deferred.resolve(summaryData);
+                    });
+            }
+
+
+            return deferred.promise;
+        }
+
+        function deleteSummaryFromCache() {
+            var dataCache = $cacheFactory.get('bookLoggerCache');
+            dataCache.remove('summary');
+        }
+        
         function getAllBooks() {
             return $http({
                 method: 'GET',
@@ -23,10 +79,16 @@
                 headers: {
                     'PS-BookLogger-Version': constants.APP_VERSION
                 },
-                transformResponse: transformGetBooks
+                transformResponse: transformGetBooks,
+                cache: true
             })
                 .then(sendResponseData)
                 .catch(sendGetBooksError);
+        }
+
+        function deleteAllBooksResponseFromCache() {
+            var httpCache = $cacheFactory.get('$http');
+            httpCache.remove('api/books');
         }
 
         function transformGetBooks(data, headersGetter) {
@@ -55,6 +117,10 @@
         }
 
         function updateBook(book) {
+
+            deleteSummaryFromCache();
+            deleteAllBooksResponseFromCache();
+
             return $http({
                 method: 'PUT',
                 url: 'api/books/' + book.book_id,
@@ -117,6 +183,10 @@
         // }
 
         function addBook(newBook) {
+
+            deleteSummaryFromCache();
+            deleteAllBooksResponseFromCache();
+
             return $http.post('api/books',newBook, {
                 transformRequest: transformPostRequest
             })
@@ -141,6 +211,10 @@
         }
 
         function deleteBook(bookID) {
+
+            deleteSummaryFromCache();
+            deleteAllBooksResponseFromCache();
+
             return $http ({
                 method: 'DELETE',
                 url: 'api/books/' + bookID

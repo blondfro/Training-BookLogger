@@ -1,11 +1,17 @@
 (function (){
 
     angular.module("app")
-        .controller("EditBookController", ["$routeParams", "books", "$cookies",            "$cookieStore", 'dataService', '$log', '$location', "BooksResource", EditBookController]);
+        .controller("EditBookController", ["$routeParams", "books", "$cookies",
+            "$cookieStore", 'dataService', '$log', '$location', "BooksResource", 'currentUser',
+            EditBookController]);
 
     function EditBookController($routeParams, books, $cookies, $cookieStore, dataService,
-                                $log, $location, BooksResource) {
+                                $log, $location, BooksResource, currentUser) {
         var vm = this;
+
+        dataService.getBookByID($routeParams.bookID)
+            .then(getBookSuccess)
+            .catch(getBookError);
 
         // dataService.getAllBooks()
         //     .then(function (books) {
@@ -24,7 +30,10 @@
 
         function getBookSuccess(book) {
             vm.currentBook = book;
-            $cookieStore.put('lastEdited', vm.currentBook);
+            currentUser.lastBookEdited = vm.currentBook;
+
+            // the below line can be removed because we're using a service instead of a cookie.
+            // $cookieStore.put('lastEdited', vm.currentBook);
 
         }
 
